@@ -12,6 +12,7 @@ module.exports = {
           precio: body.precio,
           categoria: body.categoria,
           subcategoria: body.subcategoria,
+          disponible: body.disponible,
           image: body.image.url,
           detalles: body.detalles
         }
