@@ -16,8 +16,7 @@ module.exports = {
           image: body.image.url,
           detalles: body.detalles
         }
-      )
-      console.log('pasamos el create')
+      );
 
       res.status(201).json('Producto creado exitosamente')
     } catch(error ){
