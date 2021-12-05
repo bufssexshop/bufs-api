@@ -45,9 +45,18 @@ module.exports = {
         { expiresIn: 60 * 60}
       );
 
-      res.status(201).json(token);
+      res.status(201).json({user, token});
     } catch(error) {
       res.status(401).json({message: error.message});
     }
-  }
+  },
+  async getUser(req, res){
+    try {
+      const { user: {userId} } = req
+      const user = await User.findByPk(userId)
+      res.status(200).json({user: user})
+    } catch (error) {
+      res.status(404).json(error)
+    }
+  },
 }
