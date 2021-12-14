@@ -1,7 +1,8 @@
-const router = require('express').Router()
-const { createProduct } = require('../controllers/product.controller')
-const { cloudinaryService } = require('../utils/cloudinary')
+const router = require('express').Router();
+const { cloudinaryService } = require('../utils/cloudinary');
+const { createProduct, getProduct } = require('../controllers/product.controller');
 
-router.route('/crear').post(cloudinaryService, createProduct)
+router.route('/getProduct/:_id').get(getProduct);
+router.route('/crear').post(cloudinaryService, createProduct);
 
 module.exports = router

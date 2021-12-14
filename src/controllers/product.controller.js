@@ -23,4 +23,14 @@ module.exports = {
       res.status(400).json({error})
     }
   },
+  async getProduct(req, res){
+    try {
+      const { params: { _id } } = req
+      const product = await Producto.findById({_id});
+
+      res.status(200).json(product)
+    } catch (error) {
+      res.status(400).json({error: error.message})
+    }
+  },
 }
