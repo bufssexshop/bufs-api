@@ -11,6 +11,7 @@ module.exports = {
       const token = jwt.sign(
         {
           userId: user._id,
+          userType: user.userType === 'root' ? 'root' : 'client'
         },
         process.env.SECRET,
         {expiresIn: 60 * 60}
@@ -40,10 +41,11 @@ module.exports = {
       const token = jwt.sign(
         {
           userId: user._id,
+          userType: user.userType === 'root' ? 'root' : 'client'
         },
         process.env.SECRET,
         { expiresIn: 60 * 60}
-      );
+        );
 
       res.status(201).json({user, token});
     } catch(error) {
