@@ -50,7 +50,6 @@ module.exports = {
       } = req
 
       let products = {};
-      const message = { message: 'No se encontraron productos'};
 
       if (typeSearch === 'forCode') {
         products = await Producto.find( { codigo: new RegExp(search, 'i')});
@@ -58,7 +57,7 @@ module.exports = {
         products = await Producto.find( { nombre: new RegExp(search, 'i')});
       }
 
-      res.status(200).json(products.length > 0 ? products : message)
+      res.status(200).json(products)
     } catch (error) {
       res.status(400).json({error: error.message})
     }
