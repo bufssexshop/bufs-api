@@ -24,6 +24,14 @@ const userSchema = new Schema({
     type: Number,
     required: true,
   },
+  promocion: {
+    type: Boolean,
+    required: true,
+  },
+  valorPromocion: {
+    type: Number,
+    required: true,
+  },
   detalles: {
     type: String,
     required: true,

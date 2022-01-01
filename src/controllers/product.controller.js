@@ -14,7 +14,9 @@ module.exports = {
           subcategoria: body.subcategoria,
           disponible: body.disponible,
           image: body.image.url,
-          detalles: body.detalles
+          detalles: body.detalles,
+          promocion: body.promocion,
+          valorPromocion: body.valorPromocion
         }
       );
 
@@ -46,7 +48,6 @@ module.exports = {
     try {
       const {
         body: { typeSearch, search },
-        user: { userType }
       } = req
 
       let products = {};
@@ -58,6 +59,15 @@ module.exports = {
       }
 
       res.status(200).json(products)
+    } catch (error) {
+      res.status(400).json({error: error.message})
+    }
+  },
+  async getPromotions(req, res){
+    try {
+      const promotions = await Producto.find( { promocion: true } );
+
+      res.status(200).json(promotions)
     } catch (error) {
       res.status(400).json({error: error.message})
     }
