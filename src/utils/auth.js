@@ -12,15 +12,13 @@ exports.auth = (req, res, next) => {
       throw new Error('Su sesión expiró')
     }
 
-    const { userId, userType } = jwt.verify(token, process.env.SECRET);
-
-    if(userType !== 'root') {
-      throw new Error('Usuario inválido para realizar esta petición.')
-    }
+    const { userId } = jwt.verify(token, process.env.SECRET);
+    // if(userType !== 'root') {
+    //   throw new Error('Usuario inválido para realizar esta petición.')
+    // }
 
     req.user = {
       userId,
-      userType,
     }
 
     next()
