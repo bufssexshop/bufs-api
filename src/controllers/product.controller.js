@@ -72,4 +72,31 @@ module.exports = {
       res.status(400).json({error: error.message})
     }
   },
+  async deletePromotions(req, res){
+    try {
+      await Producto.updateMany({ promocion: true }, { promocion: false, valorPromocion: 0 });
+      const promotions = await Producto.find( { promocion: true } );
+      const response = {
+        message: 'Las promociones fueron eliminadas',
+        promotions: promotions,
+      }
+      res.status(200).json(response)
+    } catch (error) {
+      res.status(400).json({error: error.message})
+    }
+  },
+  async deletePromotion(req, res){
+    try {
+      const { _id } = req.body;
+      await Producto.findByIdAndUpdate(_id, { $set: { promocion: false, valorPromocion: 0 }});
+      const promotions = await Producto.find( { promocion: true } );
+      const response = {
+        message: 'La promoción fué eliminada',
+        promotions: promotions,
+      }
+      res.status(200).json(response);
+    } catch (error) {
+      res.status(400).json({error: error.message})
+    }
+  },
 }
