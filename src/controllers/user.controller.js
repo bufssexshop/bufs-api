@@ -1,12 +1,12 @@
-const bcrypt = require('bcrypt');
-const jwt = require('jsonwebtoken');
-const User = require('../models/usuario.model');
+const bcrypt = require('bcrypt')
+const jwt = require('jsonwebtoken')
+const User = require('../models/usuario.model')
 
 module.exports = {
-  async signup(req, res){
+  async signup (req, res) {
     try {
-      const { body } = req;
-      const user = await User.create(body);
+      const { body } = req
+      const user = await User.create(body)
 
       const token = jwt.sign(
         {
@@ -14,28 +14,28 @@ module.exports = {
           userType: user.userType === 'root' ? 'root' : 'client'
         },
         process.env.SECRET,
-        {expiresIn: 60 * 60}
-      );
+        { expiresIn: 60 * 60 }
+      )
 
-      res.status(201).json(token);
-    } catch(error ){
-      res.status(400).json({error});
+      res.status(201).json(token)
+    } catch (error) {
+      res.status(400).json({ error })
     }
   },
-  async signin(req, res){
+  async signin (req, res) {
     try {
-      const { email, password } = req.body;
+      const { email, password } = req.body
 
-      const user = await User.findOne({email});
+      const user = await User.findOne({ email })
 
-      if(!user){
-        throw Error('Usuario o contraseña invalido');
+      if (!user) {
+        throw Error('Usuario o contraseña invalido')
       };
 
-      const isValid = await bcrypt.compare(password, user.password);
+      const isValid = await bcrypt.compare(password, user.password)
 
-      if(!isValid){
-        throw Error('Usuario o contraseña invalido');
+      if (!isValid) {
+        throw Error('Usuario o contraseña invalido')
       };
 
       const token = jwt.sign(
@@ -44,21 +44,21 @@ module.exports = {
           userType: user.userType === 'root' ? 'root' : 'client'
         },
         process.env.SECRET,
-        { expiresIn: 60 * 60}
-        );
+        { expiresIn: 60 * 60 }
+      )
 
-      res.status(201).json({user, token});
-    } catch(error) {
-      res.status(401).json({message: error.message});
+      res.status(201).json({ user, token })
+    } catch (error) {
+      res.status(401).json({ message: error.message })
     }
   },
-  async getUser(req, res){
+  async getUser (req, res) {
     try {
-      const { user: {userId} } = req
+      const { user: { userId } } = req
       const user = await User.findByPk(userId)
-      res.status(200).json({user: user})
+      res.status(200).json({ user: user })
     } catch (error) {
       res.status(404).json(error)
     }
-  },
+  }
 }

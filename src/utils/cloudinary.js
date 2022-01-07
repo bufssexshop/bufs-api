@@ -4,7 +4,7 @@ const cloudinary = require('cloudinary').v2
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
+  api_secret: process.env.CLOUDINARY_API_SECRET
 })
 
 exports.cloudinaryService = (req, res, next) => {
@@ -14,9 +14,9 @@ exports.cloudinaryService = (req, res, next) => {
   let uploadingFile = false
   let uploadingCount = 0
 
-  function done() {
-    if(uploadingFile) return
-    if(uploadingCount > 0) return
+  function done () {
+    if (uploadingFile) return
+    if (uploadingCount > 0) return
     next()
   }
 
@@ -29,10 +29,10 @@ exports.cloudinaryService = (req, res, next) => {
     uploadingCount++
 
     const stream = cloudinary.uploader.upload_stream({
-      upload_preset: 'photos-products',
+      upload_preset: 'photos-products'
     },
     (err, res) => {
-      if(err) throw new Error('Something went wrong')
+      if (err) throw new Error('Something went wrong')
 
       req.body[key] = res
       uploadingFile = false

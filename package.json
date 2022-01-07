@@ -5,13 +5,14 @@
   "license": "MIT",
   "author": "Carlos Valencia Henao <rasfreed@gmail.com> (https://www.linkedin.com/in/carlosvalenciahenao)",
   "engines": {
-    "node" : "14.17.5",
+    "node": "14.17.5",
     "yarn": "1.22.5",
     "npm": "6.14.14"
   },
   "scripts": {
     "start": "node src/server.js",
-    "dev": "nodemon src/server.js"
+    "dev": "nodemon src/server.js",
+    "lint": "eslint ."
   },
   "dependencies": {
     "bcrypt": "^5.0.1",
@@ -26,6 +27,10 @@
     "nodemailer": "^6.7.0"
   },
   "devDependencies": {
-    "nodemon": "^2.0.13"
+    "nodemon": "^2.0.13",
+    "standard": "^16.0.4"
+  },
+  "eslintConfig": {
+    "extends": "./node_modules/standard/eslintrc.json"
   }
 }
