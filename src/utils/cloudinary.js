@@ -32,9 +32,11 @@ exports.cloudinaryService = (req, res, next) => {
       upload_preset: 'photos-products'
     },
     (err, res) => {
-      if (err) throw new Error('Something went wrong')
+      if (err) throw new Error('Algo salió mal')
 
-      req.body[key] = res
+      const publicId = 'pictureId'
+      req.body[key] = res.secure_url
+      req.body[publicId] = res.public_id
       uploadingFile = false
       uploadingCount--
       done()
@@ -51,7 +53,6 @@ exports.cloudinaryService = (req, res, next) => {
 
   busboy.on('finish', () => {
     done()
-    // next()
   })
 
   req.pipe(busboy)

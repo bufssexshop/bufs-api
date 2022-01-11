@@ -51,6 +51,10 @@ const userSchema = new Schema({
   image: {
     type: String,
     required: true
+  },
+  pictureId: {
+    type: String,
+    required: true
   }
 }, {
   timestamps: true
