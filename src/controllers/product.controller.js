@@ -163,5 +163,15 @@ module.exports = {
     } catch (error) {
       res.status(400).json({ error })
     }
+  },
+  async createPromotionGeneral (req, res) {
+    try {
+      const { body } = req
+      await Producto.updateMany({}, { promocion: true, valorPromocion: body.valorPromocion })
+      const productos = await Producto.find()
+      res.status(201).json({ message: 'Se creó la promoción general', promotions: productos })
+    } catch (error) {
+      res.status(400).json({ error })
+    }
   }
 }

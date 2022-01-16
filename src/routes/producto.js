@@ -4,6 +4,7 @@ const { cloudinaryService } = require('../utils/cloudinary')
 const {
   updateProductWithOutPicture,
   updateProductWithPicture,
+  createPromotionGeneral,
   changePromotionPrice,
   deletePromotions,
   deletePromotion,
@@ -24,6 +25,7 @@ router.route('/deletePromotion').post(auth, deletePromotion)
 router.route('/deletePromotions').post(auth, deletePromotions)
 router.route('/crear').post(auth, cloudinaryService, createProduct)
 router.route('/changePromotionPrice').post(auth, changePromotionPrice)
+router.route('/createPromotionGeneral').post(auth, createPromotionGeneral)
 router.route('/updateProductWithOutPicture').post(auth, updateProductWithOutPicture)
 router.route('/updateProductWithPicture').post(auth, cloudinaryService, updateProductWithPicture)
 
