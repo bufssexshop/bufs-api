@@ -9,6 +9,7 @@ const {
   deletePromotions,
   deletePromotion,
   getPromotions,
+  getIndicators,
   createProduct,
   deleteProduct,
   getProducts,
@@ -19,6 +20,7 @@ const {
 router.route('/getProducts').get(getProducts)
 router.route('/getSearch').post(auth, getSearch)
 router.route('/getProduct/:_id').get(getProduct)
+router.route('/getIndicators').get(auth, getIndicators)
 router.route('/getPromotions').get(auth, getPromotions)
 router.route('/deleteProduct').post(auth, deleteProduct)
 router.route('/deletePromotion').post(auth, deletePromotion)

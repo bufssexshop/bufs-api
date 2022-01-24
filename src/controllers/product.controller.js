@@ -173,5 +173,14 @@ module.exports = {
     } catch (error) {
       res.status(400).json({ error })
     }
+  },
+  async getIndicators (req, res) {
+    try {
+      const cantidad = await Producto.count()
+      const promotions = await Producto.find({ promocion: true })
+      res.status(201).json({ cantidad: cantidad, promociones: promotions.length })
+    } catch (error) {
+      res.status(400).json({ error })
+    }
   }
 }
