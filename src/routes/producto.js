@@ -17,7 +17,7 @@ const {
   getSearch
 } = require('../controllers/product.controller')
 
-router.route('/getProducts').get(getProducts)
+router.route('/getProducts').post(getProducts)
 router.route('/getSearch').post(auth, getSearch)
 router.route('/getProduct/:_id').get(getProduct)
 router.route('/getIndicators').get(auth, getIndicators)

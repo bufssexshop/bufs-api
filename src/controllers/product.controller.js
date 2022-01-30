@@ -43,8 +43,9 @@ module.exports = {
     }
   },
   async getProducts (req, res) {
+    const { body } = req
     try {
-      const products = await Producto.find()
+      const products = await Producto.find({ subcategoria: body.subcategoria })
 
       res.status(200).json(products)
     } catch (error) {
