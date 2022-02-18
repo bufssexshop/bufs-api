@@ -1,5 +1,6 @@
-const Producto = require('../models/producto.model')
 const cloudinary = require('cloudinary').v2
+const User = require('../models/usuario.model')
+const Producto = require('../models/producto.model')
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -13,17 +14,19 @@ module.exports = {
       const { body } = req
       await Producto.create(
         {
+          image: body.image,
           codigo: body.codigo,
           nombre: body.nombre,
           precio: body.precio,
-          categoria: body.categoria,
-          subcategoria: body.subcategoria,
-          disponible: body.disponible,
-          image: body.image,
-          pictureId: body.pictureId,
           detalles: body.detalles,
+          categoria: body.categoria,
+          pictureId: body.pictureId,
           promocion: body.promocion,
-          valorPromocion: body.valorPromocion
+          disponible: body.disponible,
+          categoriaDos: body.categoriaDos,
+          subcategoria: body.subcategoria,
+          valorPromocion: body.valorPromocion,
+          subcategoriaDos: body.subcategoriaDos
         }
       )
 
@@ -45,7 +48,7 @@ module.exports = {
   async getProducts (req, res) {
     const { body } = req
     try {
-      const products = await Producto.find({ subcategoria: body.subcategoria })
+      const products = await Producto.find({ $or: [{ subcategoria: body.subcategoria }, { subcategoriaDos: body.subcategoria }] })
 
       res.status(200).json(products)
     } catch (error) {
@@ -179,7 +182,9 @@ module.exports = {
     try {
       const cantidad = await Producto.count()
       const promotions = await Producto.find({ promocion: true })
-      res.status(201).json({ cantidad: cantidad, promociones: promotions.length })
+      const inactivos = await Producto.find({ disponible: false })
+      const usuario = await User.count()
+      res.status(201).json({ cantidad: cantidad, promociones: promotions.length, inactivos: inactivos.length, usuarios: usuario })
     } catch (error) {
       res.status(400).json({ error })
     }

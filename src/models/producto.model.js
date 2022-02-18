@@ -44,6 +44,12 @@ const userSchema = new Schema({
     type: String,
     required: true
   },
+  categoriaDos: {
+    type: String
+  },
+  subcategoriaDos: {
+    type: String
+  },
   disponible: {
     type: Boolean,
     required: true
