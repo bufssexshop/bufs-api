@@ -86,6 +86,10 @@ const userSchema = new Schema({
     type: String,
     required: true
   },
+  active: {
+    type: Boolean,
+    required: true
+  },
   termsAndConditions: {
     type: Boolean,
     required: true
