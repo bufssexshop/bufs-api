@@ -17,12 +17,12 @@ const {
   getSearch
 } = require('../controllers/product.controller')
 
-router.route('/getProducts').post(getProducts)
 router.route('/getSearch').post(auth, getSearch)
 router.route('/getProduct/:_id').get(getProduct)
 router.route('/getPromotions').get(getPromotions)
 router.route('/getIndicators').get(auth, getIndicators)
 router.route('/deleteProduct').post(auth, deleteProduct)
+router.route('/getProducts/:subcategory').get(getProducts)
 router.route('/deletePromotion').post(auth, deletePromotion)
 router.route('/deletePromotions').post(auth, deletePromotions)
 router.route('/crear').post(auth, cloudinaryService, createProduct)

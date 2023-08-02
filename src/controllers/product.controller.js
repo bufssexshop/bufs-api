@@ -46,9 +46,9 @@ module.exports = {
     }
   },
   async getProducts (req, res) {
-    const { body } = req
+    const { params: { subcategory } } = req
     try {
-      const products = await Producto.find({ $or: [{ subcategoria: body.subcategoria }, { subcategoriaDos: body.subcategoria }] })
+      const products = await Producto.find({ $or: [{ subcategoria: subcategory }, { subcategoriaDos: subcategory }] })
 
       res.status(200).json(products)
     } catch (error) {
