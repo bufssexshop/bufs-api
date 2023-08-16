@@ -1,6 +1,7 @@
 const { model, models, Schema } = require('mongoose')
+const monngosePagination = require('mongoose-paginate-v2')
 
-const userSchema = new Schema({
+const productSchema = new Schema({
   codigo: {
     type: String,
     required: true,
@@ -66,6 +67,8 @@ const userSchema = new Schema({
   timestamps: true
 })
 
-const Producto = model('Producto', userSchema)
+productSchema.plugin(monngosePagination)
+
+const Producto = model('Producto', productSchema)
 
 module.exports = Producto

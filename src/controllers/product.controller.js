@@ -46,11 +46,25 @@ module.exports = {
     }
   },
   async getProducts (req, res) {
-    const { params: { subcategory } } = req
-    try {
-      const products = await Producto.find({ $or: [{ subcategoria: subcategory }, { subcategoriaDos: subcategory }] })
+    const { params: { subcategory }, query: { page, limit } } = req
 
-      res.status(200).json(products)
+    const options = {
+      page,
+      limit,
+      customLabels: {
+        totalDocs: 'totalProducts',
+        docs: 'products'
+      }
+    }
+
+    const query = {
+      $or: [{ subcategoria: subcategory }, { subcategoriaDos: subcategory }]
+    }
+
+    try {
+      const result = await Producto.paginate(query, options)
+
+      res.status(200).json(result)
     } catch (error) {
       res.status(400).json({ error: error.message })
     }
