@@ -41,13 +41,14 @@ module.exports = {
       const token = jwt.sign(
         {
           userId: user._id,
-          userType: user.userType === 'root' ? 'root' : 'client'
+          userType: user.userType === 'root' ? 'root' : 'client',
+          name: user.firstName
         },
         process.env.SECRET,
         { expiresIn: 60 * 60 }
       )
 
-      res.status(201).json({ user, token })
+      res.status(201).json({ token })
     } catch (error) {
       res.status(401).json({ message: error.message })
     }
