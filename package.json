@@ -6,7 +6,7 @@
   "author": "Carlos Valencia Henao <rasfreed@gmail.com> (https://www.linkedin.com/in/carlosvalenciahenao)",
   "engines": {
     "node": "14.17.5",
-    "yarn": "1.22.5",
+    "yarn": "1.22.19",
     "npm": "6.14.14"
   },
   "scripts": {
