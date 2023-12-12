@@ -8,6 +8,7 @@ const {
   changePromotionPrice,
   deletePromotions,
   deletePromotion,
+  getAllProducts,
   getPromotions,
   getIndicators,
   createProduct,
@@ -17,6 +18,7 @@ const {
   getSearch
 } = require('../controllers/product.controller')
 
+router.route('/all').post(auth, getAllProducts)
 router.route('/getSearch').post(auth, getSearch)
 router.route('/getProduct/:_id').get(getProduct)
 router.route('/getPromotions').get(getPromotions)
