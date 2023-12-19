@@ -34,9 +34,10 @@ exports.cloudinaryService = (req, res, next) => {
     (err, res) => {
       if (err) throw new Error('Algo salió mal')
 
-      const publicId = 'pictureId'
+      const pictureId = 'pictureId'
+      const pictureId2 = 'pictureId2'
       req.body[key] = res.secure_url
-      req.body[publicId] = res.public_id
+      if (key === 'image') { req.body[pictureId] = res.public_id } else if (key === 'image2') req.body[pictureId2] = res.public_id
       uploadingFile = false
       uploadingCount--
       done()

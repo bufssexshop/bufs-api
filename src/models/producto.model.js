@@ -25,6 +25,10 @@ const productSchema = new Schema({
     type: Number,
     required: true
   },
+  precioCredito: {
+    type: Number,
+    required: true
+  },
   promocion: {
     type: Boolean,
     required: true
@@ -59,9 +63,15 @@ const productSchema = new Schema({
     type: String,
     required: true
   },
+  image2: {
+    type: String
+  },
   pictureId: {
     type: String,
     required: true
+  },
+  pictureId2: {
+    type: String
   }
 }, {
   timestamps: true

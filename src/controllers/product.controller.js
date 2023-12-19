@@ -8,6 +8,8 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET
 })
 
+const successMessage = 'success'
+
 module.exports = {
   async createProduct (req, res) {
     try {
@@ -15,22 +17,25 @@ module.exports = {
       await Producto.create(
         {
           image: body.image,
+          image2: body.image2,
           codigo: body.codigo,
           nombre: body.nombre,
           precio: body.precio,
           detalles: body.detalles,
           categoria: body.categoria,
           pictureId: body.pictureId,
+          pictureId2: body.pictureId2,
           promocion: body.promocion,
           disponible: body.disponible,
           categoriaDos: body.categoriaDos,
           subcategoria: body.subcategoria,
+          precioCredito: body.precioCredito,
           valorPromocion: body.valorPromocion,
           subcategoriaDos: body.subcategoriaDos
         }
       )
 
-      res.status(201).json('Producto creado exitosamente')
+      res.status(201).json({ message: successMessage })
     } catch (error) {
       res.status(400).json({ error })
     }
@@ -170,7 +175,7 @@ module.exports = {
         { new: true }
       )
 
-      res.status(201).json({ message: 'Producto modificado exitosamente', producto })
+      res.status(200).json({ message: successMessage, producto })
     } catch (error) {
       res.status(400).json({ error })
     }
@@ -187,7 +192,7 @@ module.exports = {
         { new: true }
       )
 
-      res.status(201).json({ message: 'Producto modificado exitosamente', producto: productoDespues })
+      res.status(200).json({ message: successMessage, producto: productoDespues })
     } catch (error) {
       res.status(400).json({ error })
     }
@@ -197,9 +202,10 @@ module.exports = {
       const { body } = req
       const producto = await Producto.findById(body._id)
       await cloudinary.uploader.destroy(producto.pictureId)
+      await cloudinary.uploader.destroy(producto.pictureId2)
       await Producto.findByIdAndDelete(body._id)
 
-      res.status(201).json({ message: '¡Producto eliminado!, Actualiza o recarga para ver los cambios' })
+      res.status(200).json({ message: successMessage })
     } catch (error) {
       res.status(400).json({ error })
     }
@@ -209,7 +215,7 @@ module.exports = {
       const { body } = req
       await Producto.updateMany({}, { promocion: true, valorPromocion: body.valorPromocion })
       const productos = await Producto.find()
-      res.status(201).json({ message: 'Se creó la promoción general', promotions: productos })
+      res.status(201).json({ message: successMessage, promotions: productos })
     } catch (error) {
       res.status(400).json({ error })
     }
@@ -220,7 +226,7 @@ module.exports = {
       const promotions = await Producto.find({ promocion: true })
       const inactivos = await Producto.find({ disponible: false })
       const usuario = await User.count()
-      res.status(201).json({ cantidad: cantidad, promociones: promotions.length, inactivos: inactivos.length, usuarios: usuario })
+      res.status(200).json({ cantidad: cantidad, promociones: promotions.length, inactivos: inactivos.length, usuarios: usuario })
     } catch (error) {
       res.status(400).json({ error })
     }
