@@ -2,13 +2,12 @@ const { auth } = require('../utils/auth')
 const router = require('express').Router()
 const { cloudinaryService } = require('../utils/cloudinary')
 const {
-  updateProductWithOutPicture,
-  updateProductWithPicture,
   createPromotionGeneral,
   changePromotionPrice,
   deletePromotions,
   deletePromotion,
   getAllProducts,
+  updateProduct,
   getPromotions,
   getIndicators,
   createProduct,
@@ -30,7 +29,6 @@ router.route('/deletePromotions').post(auth, deletePromotions)
 router.route('/crear').post(auth, cloudinaryService, createProduct)
 router.route('/changePromotionPrice').post(auth, changePromotionPrice)
 router.route('/createPromotionGeneral').post(auth, createPromotionGeneral)
-router.route('/updateProductWithOutPicture').post(auth, updateProductWithOutPicture)
-router.route('/updateProductWithPicture').post(auth, cloudinaryService, updateProductWithPicture)
+router.route('/updateProduct').post(auth, cloudinaryService, updateProduct)
 
 module.exports = router

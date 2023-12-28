@@ -165,34 +165,21 @@ module.exports = {
       res.status(400).json({ error: error.message })
     }
   },
-  async updateProductWithOutPicture (req, res) {
+  async updateProduct (req, res) {
     try {
       const { body } = req
 
-      const producto = await Producto.findByIdAndUpdate(
+      const currentProduct = await Producto.findById(body._id)
+      if (body.image && currentProduct.image) await cloudinary.uploader.destroy(currentProduct.pictureId)
+      if (body.image2 && currentProduct.image2) await cloudinary.uploader.destroy(currentProduct.pictureId2)
+
+      await Producto.findByIdAndUpdate(
         body._id,
         body,
         { new: true }
       )
 
-      res.status(200).json({ message: successMessage, producto })
-    } catch (error) {
-      res.status(400).json({ error })
-    }
-  },
-  async updateProductWithPicture (req, res) {
-    try {
-      const { body } = req
-      const productoAntes = await Producto.findById(body._id)
-      await cloudinary.uploader.destroy(productoAntes.pictureId)
-
-      const productoDespues = await Producto.findByIdAndUpdate(
-        body._id,
-        body,
-        { new: true }
-      )
-
-      res.status(200).json({ message: successMessage, producto: productoDespues })
+      res.status(200).json({ message: successMessage })
     } catch (error) {
       res.status(400).json({ error })
     }
@@ -202,7 +189,7 @@ module.exports = {
       const { body } = req
       const producto = await Producto.findById(body._id)
       await cloudinary.uploader.destroy(producto.pictureId)
-      await cloudinary.uploader.destroy(producto.pictureId2)
+      if (producto.pictureId2) await cloudinary.uploader.destroy(producto.pictureId2)
       await Producto.findByIdAndDelete(body._id)
 
       res.status(200).json({ message: successMessage })
