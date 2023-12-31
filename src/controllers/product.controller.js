@@ -73,7 +73,7 @@ module.exports = {
     }
   },
   async getProducts (req, res) {
-    const { params: { subcategory }, query: { page, limit } } = req
+    const { params: { category, subcategory }, query: { page, limit } } = req
 
     const options = {
       page,
@@ -85,7 +85,13 @@ module.exports = {
     }
 
     const query = {
-      $or: [{ subcategoria: subcategory }, { subcategoriaDos: subcategory }]
+      $and: [
+        { categoria: category }
+      ],
+      $or: [
+        { subcategoria: subcategory },
+        { subcategoriaDos: subcategory }
+      ]
     }
 
     try {
