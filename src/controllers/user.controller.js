@@ -3,6 +3,13 @@ const jwt = require('jsonwebtoken')
 const User = require('../models/usuario.model')
 
 module.exports = {
+  async authValidation (req, res) {
+    try {
+      res.status(201).json({ message: 'success' })
+    } catch (error) {
+      res.status(401).json({ message: error.message })
+    }
+  },
   async signup (req, res) {
     try {
       const { body } = req
