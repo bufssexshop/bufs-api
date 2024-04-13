@@ -12,8 +12,7 @@
   "scripts": {
     "start": "node src/server.js",
     "dev": "nodemon src/server.js",
-    "lint": "eslint .",
-    "build": "yarn --version 1.22.21 install"
+    "lint": "eslint ."
   },
   "dependencies": {
     "bcrypt": "^5.0.1",
