@@ -121,6 +121,23 @@ module.exports = {
       res.status(400).json({ error: error.message })
     }
   },
+  async  getAdvancedSearch (req, res) {
+    try {
+      const {
+        body: { search, min, max }
+      } = req
+
+      let products = {}
+      let query = { nombre: new RegExp(search, 'i') }
+      if (min > 0) query = { ...query, precio: { ...query.precio, $gte: min } }
+      if (max > 0) query = { ...query, precio: { ...query.precio, $lte: max } }
+      products = await Producto.find(query)
+
+      res.status(200).json(products)
+    } catch (error) {
+      res.status(400).json({ error: error.message })
+    }
+  },
   async getPromotions (req, res) {
     try {
       const promotions = await Producto.find({ promocion: true })

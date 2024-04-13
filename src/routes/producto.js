@@ -4,6 +4,7 @@ const { cloudinaryService } = require('../utils/cloudinary')
 const {
   createPromotionGeneral,
   changePromotionPrice,
+  getAdvancedSearch,
   deletePromotions,
   deletePromotion,
   getAllProducts,
@@ -23,6 +24,7 @@ router.route('/getProduct/:_id').get(getProduct)
 router.route('/getPromotions').get(getPromotions)
 router.route('/getIndicators').get(auth, getIndicators)
 router.route('/deleteProduct').post(auth, deleteProduct)
+router.route('/getAdvancedSearch').post(getAdvancedSearch)
 router.route('/getProducts/:category/:subcategory').get(getProducts)
 router.route('/deletePromotion').post(auth, deletePromotion)
 router.route('/deletePromotions').post(auth, deletePromotions)
