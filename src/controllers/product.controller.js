@@ -102,6 +102,32 @@ module.exports = {
       res.status(400).json({ error: error.message })
     }
   },
+  async getCategoryProducts (req, res) {
+    const { params: { category }, query: { page, limit } } = req
+
+    const options = {
+      page,
+      limit,
+      customLabels: {
+        totalDocs: 'totalProducts',
+        docs: 'products'
+      }
+    }
+
+    const query = {
+      $and: [
+        { categoria: category }
+      ]
+    }
+
+    try {
+      const result = await Producto.paginate(query, options)
+
+      res.status(200).json(result)
+    } catch (error) {
+      res.status(400).json({ error: error.message })
+    }
+  },
   async getSearch (req, res) {
     try {
       const {
