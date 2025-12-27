@@ -1,80 +1,146 @@
-const bcrypt = require('bcrypt')
-const jwt = require('jsonwebtoken')
-const User = require('../models/usuario.model')
+import bcrypt from 'bcrypt'
+import jwt from 'jsonwebtoken'
+import User from '../models/user.model.js'
 
-module.exports = {
-  async authValidation (req, res) {
-    try {
-      res.status(201).json({ message: 'success' })
-    } catch (error) {
-      res.status(401).json({ message: error.message })
-    }
-  },
-  async signup (req, res) {
-    try {
-      const { body } = req
-      const user = await User.create(body)
+export async function authValidation (req, res) {
+  res.status(200).json({ message: 'Authorized '})
+}
 
-      const token = jwt.sign(
-        {
-          userId: user._id,
-          userType: user.userType === 'root' ? 'root' : 'client'
-        },
-        process.env.SECRET,
-        { expiresIn: 60 * 60 }
-      )
+export async function signup (req, res, next) {
+  try {
+    const userData = { ...req.body }
 
-      res.status(201).json(token)
-    } catch (error) {
-      res.status(400).json({ error })
-    }
-  },
-  async signin (req, res) {
-    try {
-      const { email, password } = req.body
+    if (!userData.role) userData.role = 'client'
 
-      const user = await User.findOne({ email })
+    const user = await User.create(userData)
 
-      if (!user) {
-        throw Error('Usuario o contraseña invalido')
-      };
-
-      const isValid = await bcrypt.compare(password, user.password)
-
-      if (!isValid) {
-        throw Error('Usuario o contraseña invalido')
-      };
-
-      const token = jwt.sign(
-        {
-          userId: user._id,
-          userType: user.userType === 'root' ? 'root' : 'client',
-          name: user.firstName
-        },
-        process.env.SECRET,
-        { expiresIn: 60 * 60 }
-      )
-
-      res.status(201).json({ token })
-    } catch (error) {
-      res.status(401).json({ message: error.message })
-    }
-  },
-  async getUser (req, res) {
-    try {
-      const { user: { userId } } = req
-      const user = await User.findByPk(userId)
-      res.status(200).json({ user: user })
-    } catch (error) {
-      res.status(404).json(error)
-    }
-  },
-  async getUsers (req, res) {
-    try {
-      const users = await User.find()
-      res.status(200).json(users)
-    } catch (error) {
-      res.status(404).json(error)
-    }
+    res.status(201).json({
+      success: true,
+      message: 'User created successfully',
+      user: {
+        id: user._id,
+        email: user.email,
+        name: user.firstName,
+        role: user.role
+      }
+    })
+  } catch (error) {
+    next(error)
   }
 }
+
+export async function signin (req, res, next) {
+  try {
+    const { email, password } = req.body
+
+    const user = await User.findOne({ email })
+
+    if (!user)
+      return res.status(401).json({ message: 'Invalid email or password' })
+
+    if (!user.active)
+      return res.status(403).json({ message: 'Your account is deactivated. Please contact support.' });
+
+    const isValid = await bcrypt.compare(password, user.password)
+
+    if (!isValid)
+      return res.status(401).json({ message: 'Invalid email or password' })
+
+    const token = jwt.sign(
+      {
+        id: user._id,
+        role: user.role,
+        name: user.firstName
+      },
+      process.env.JWT_SECRET,
+      { expiresIn: '24h' }
+    )
+
+    res.status(200).json({
+      success: true,
+      message: 'Login successful',
+      token,
+      user: {
+        id: user._id,
+        name: user.firstName,
+        role: user.role
+      }
+    })
+  } catch (error) {
+    next(error)
+  }
+}
+
+export async function getUser (req, res, next) {
+  try {
+    const { id } = req.user
+    const user = await User.findById(id).select('-password').lean()
+
+    if (!user)
+      return res.status(404).json({ message: 'User not found'})
+
+    res.status(200).json({ success: true, user })
+  } catch (error) {
+    next(error)
+  }
+}
+
+export async function getUsers (req, res, next) {
+  try {
+    if (req.user.role !== 'admin')
+      return res.status(403).json({ message: 'Access denied: Insufficient permissions'})
+
+    const users = await User.find().select('-password').lean()
+
+    res.status(200).json({
+      success: true,
+      users
+    })
+  } catch (error) {
+    next(error)
+  }
+}
+
+export async function toggleUserStatus(req, res, next) {
+  try {
+    const { id } = req.params;
+    const user = await User.findById(id);
+
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    user.active = !user.active;
+    await user.save();
+
+    res.status(200).json({
+      success: true,
+      message: `User ${user.active ? 'activated' : 'deactivated'} successfully`,
+      active: user.active
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function updateUserDetails(req, res, next) {
+  try {
+    const { id } = req.params;
+    const updateData = { ...req.body };
+
+    const updatedUser = await User.findByIdAndUpdate(
+      id,
+      updateData,
+      { new: true, runValidators: true }
+    ).select('-password');
+
+    if (!updatedUser) return res.status(404).json({ message: 'User not found' });
+
+    res.status(200).json({
+      success: true,
+      message: 'User details updated',
+      user: updatedUser
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+

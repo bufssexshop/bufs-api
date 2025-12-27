@@ -1,29 +1,31 @@
-const jwt = require('jsonwebtoken')
+import jwt from 'jsonwebtoken'
 
-exports.auth = (req, res, next) => {
+const auth = (req, res, next) => {
   try {
-    const { authorization } = req.headers
-    if (!authorization) {
-      throw new Error('Su sesión expiró')
+    const authHeader = req.headers.authorization
+
+    if (!authHeader) {
+      const error = new Error('No token provided')
+      error.statusCode = 401
+      throw error
     }
 
-    const [_, token] = authorization.split(' ')
-    if (!token) {
-      console.log(_)
-      throw new Error('Su sesión expiró')
-    }
+    const [type, token] = authHeader.split(' ')
 
-    const { userId } = jwt.verify(token, process.env.SECRET)
-    // if(userType !== 'root') {
-    //   throw new Error('Usuario inválido para realizar esta petición.')
-    // }
+    if (type !== 'Bearer' || !token)
+      throw new Error('Invalid authorization format')
+
+    const payload = jwt.verify(token, process.env.JWT_SECRET)
 
     req.user = {
-      userId
+      id: payload.id,
+      role: payload.role
     }
 
     next()
   } catch (error) {
-    res.status(401).json({ message: 'Su sesión expiró', error })
+    next(error)
   }
 }
+
+export default auth

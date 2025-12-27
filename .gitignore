@@ -1,3 +1,6 @@
-node_modules
+node_modules/
 .env
-querys.txt
+dump/
+*.bson
+*.json
+.DS_Store

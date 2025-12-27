@@ -1,6 +1,7 @@
-const cloudinary = require('cloudinary').v2
-const User = require('../models/usuario.model')
-const Producto = require('../models/producto.model')
+import { v2 as cloudinary } from 'cloudinary'
+import User from '../models/user.model.js'
+import Product from '../models/product.model.js'
+import { uploadToCloudinary, deleteFromCloudinary } from '../utils/cloudinary.js'
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -8,72 +9,83 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET
 })
 
-const successMessage = 'success'
+export const createProduct = async (req, res, next) => {
+  try {
+    const { body, files } = req
 
-module.exports = {
-  async createProduct (req, res) {
-    try {
-      const { body } = req
-      await Producto.create(
-        {
-          image: body.image,
-          image2: body.image2,
-          codigo: body.codigo,
-          nombre: body.nombre,
-          precio: body.precio,
-          detalles: body.detalles,
-          categoria: body.categoria,
-          pictureId: body.pictureId,
-          pictureId2: body.pictureId2,
-          promocion: body.promocion,
-          disponible: body.disponible,
-          categoriaDos: body.categoriaDos,
-          subcategoria: body.subcategoria,
-          precioCredito: body.precioCredito,
-          valorPromocion: body.valorPromocion,
-          subcategoriaDos: body.subcategoriaDos
-        }
-      )
+    if (!files || !files.image)
+      return res.status(400).json({
+        success: false,
+        message: 'The primary image is required'
+      })
 
-      res.status(201).json({ message: successMessage })
-    } catch (error) {
-      res.status(400).json({ error })
+    const productData = { ...body }
+    const uploadTasks = []
+
+    // Upload files/images
+    if (files && (files.image || files.image2)) {
+      if (files.image)
+        uploadTasks.push(
+          uploadToCloudinary(files.image[0].buffer)
+            .then(result => {
+              productData.image = result.secure_url
+              productData.pictureId = result.public_id
+            })
+        )
+
+      if (files.image2)
+        uploadTasks.push(
+          uploadToCloudinary(files.image2[0].buffer).then(result => {
+            productData.image2 = result.secure_url
+            productData.pictureId2 = result.public_id
+          })
+        )
+
+      await Promise.all(uploadTasks)
     }
-  },
-  async getProduct (req, res) {
-    try {
-      const { params: { _id } } = req
-      const product = await Producto.findById({ _id })
 
-      res.status(200).json(product)
-    } catch (error) {
-      res.status(400).json({ error: error.message })
-    }
-  },
-  async getAllProducts (req, res) {
-    const { query: { page, limit } } = req
+    const newProduct = await Product.create(productData)
 
-    const options = {
-      page,
-      limit,
-      customLabels: {
-        totalDocs: 'totalProducts',
-        docs: 'products'
-      }
+    res.status(201).json({
+      success: true,
+      message: 'Product created successfully',
+      product: newProduct
+    })
+  } catch (error) {
+    next(error)
+  }
+}
+
+export async function getProduct (req, res, next) {
+  try {
+    const { id } = req.params
+    const product = await Product.findById(id).lean()
+
+    if (!product) {
+      return res.status(404).json({
+        message: 'product not found'
+      })
     }
+
+    res.status(200).json({
+      success: true,
+      product,
+    })
+  } catch (error) {
+    next(error)
+  }
+}
+
+export async function getAllProducts (req, res, next) {
+  try {
+    const page = Math.max(parseInt(req.query.page, 10) || 1, 1)
+    const limit = Math.min(parseInt(req.query.limit, 10) || 10, 50)
 
     const query = {}
 
-    try {
-      const result = await Producto.paginate(query, options)
+    if (!req.user || req.user.role !== 'admin')
+      query.available = true
 
-      res.status(200).json(result)
-    } catch (error) {
-      res.status(400).json({ error: error.message })
-    }
-  },
-  async getProducts (req, res) {
-    const { params: { category, subcategory }, query: { page, limit } } = req
 
     const options = {
       page,
@@ -81,190 +93,373 @@ module.exports = {
       customLabels: {
         totalDocs: 'totalProducts',
         docs: 'products'
-      }
+      },
+      sort: { createdAt: -1 }
     }
 
-    const query = {
-      $and: [
-        { categoria: category }
-      ],
-      $or: [
-        { subcategoria: subcategory },
-        { subcategoriaDos: subcategory }
-      ]
-    }
+    const result = await Product.paginate(query, options)
 
-    try {
-      const result = await Producto.paginate(query, options)
-
-      res.status(200).json(result)
-    } catch (error) {
-      res.status(400).json({ error: error.message })
-    }
-  },
-  async getCategoryProducts (req, res) {
-    const { params: { category }, query: { page, limit } } = req
-
-    const options = {
-      page,
-      limit,
-      customLabels: {
-        totalDocs: 'totalProducts',
-        docs: 'products'
-      }
-    }
-
-    const query = {
-      $and: [
-        { categoria: category }
-      ]
-    }
-
-    try {
-      const result = await Producto.paginate(query, options)
-
-      res.status(200).json(result)
-    } catch (error) {
-      res.status(400).json({ error: error.message })
-    }
-  },
-  async getSearch (req, res) {
-    try {
-      const {
-        body: { typeSearch, search }
-      } = req
-
-      let products = {}
-
-      if (typeSearch === 'forCode') {
-        products = await Producto.find({ codigo: new RegExp(search, 'i') })
-      } else {
-        products = await Producto.find({ nombre: new RegExp(search, 'i') })
-      }
-
-      res.status(200).json(products)
-    } catch (error) {
-      res.status(400).json({ error: error.message })
-    }
-  },
-  async  getAdvancedSearch (req, res) {
-    try {
-      const {
-        body: { search, min, max }
-      } = req
-
-      let products = {}
-      let query = { nombre: new RegExp(search, 'i') }
-      if (min > 0) query = { ...query, precio: { ...query.precio, $gte: min } }
-      if (max > 0) query = { ...query, precio: { ...query.precio, $lte: max } }
-      products = await Producto.find(query)
-
-      res.status(200).json(products)
-    } catch (error) {
-      res.status(400).json({ error: error.message })
-    }
-  },
-  async getPromotions (req, res) {
-    try {
-      const promotions = await Producto.find({ promocion: true })
-
-      res.status(200).json(promotions)
-    } catch (error) {
-      res.status(400).json({ error: error.message })
-    }
-  },
-  async deletePromotions (req, res) {
-    try {
-      await Producto.updateMany({ promocion: true }, { promocion: false, valorPromocion: 0 })
-      const promotions = await Producto.find({ promocion: true })
-      const response = {
-        message: 'Las promociones fueron eliminadas',
-        promotions: promotions
-      }
-      res.status(200).json(response)
-    } catch (error) {
-      res.status(400).json({ error: error.message })
-    }
-  },
-  async deletePromotion (req, res) {
-    try {
-      const { _id } = req.body
-      await Producto.findByIdAndUpdate(_id, { $set: { promocion: false, valorPromocion: 0 } })
-      const promotions = await Producto.find({ promocion: true })
-      const response = {
-        message: 'La promoción fué eliminada',
-        promotions: promotions
-      }
-      res.status(200).json(response)
-    } catch (error) {
-      res.status(400).json({ error: error.message })
-    }
-  },
-  async changePromotionPrice (req, res) {
-    try {
-      const { _id, newPromotionPrice } = req.body
-      await Producto.findByIdAndUpdate(_id, { $set: { promocion: true, valorPromocion: newPromotionPrice } })
-      const promotions = await Producto.find({ promocion: true })
-      const response = {
-        message: 'Se cambió el valor de promoción',
-        promotions: promotions
-      }
-      res.status(200).json(response)
-    } catch (error) {
-      res.status(400).json({ error: error.message })
-    }
-  },
-  async updateProduct (req, res) {
-    try {
-      const { body } = req
-
-      const currentProduct = await Producto.findById(body._id)
-      if (body.image && currentProduct.image) await cloudinary.uploader.destroy(currentProduct.pictureId)
-      if (body.image2 && currentProduct.image2) await cloudinary.uploader.destroy(currentProduct.pictureId2)
-
-      await Producto.findByIdAndUpdate(
-        body._id,
-        body,
-        { new: true }
-      )
-
-      res.status(200).json({ message: successMessage })
-    } catch (error) {
-      res.status(400).json({ error })
-    }
-  },
-  async deleteProduct (req, res) {
-    try {
-      const { body } = req
-      const producto = await Producto.findById(body._id)
-      await cloudinary.uploader.destroy(producto.pictureId)
-      if (producto.pictureId2) await cloudinary.uploader.destroy(producto.pictureId2)
-      await Producto.findByIdAndDelete(body._id)
-
-      res.status(200).json({ message: successMessage })
-    } catch (error) {
-      res.status(400).json({ error })
-    }
-  },
-  async createPromotionGeneral (req, res) {
-    try {
-      const { body } = req
-      await Producto.updateMany({}, { promocion: true, valorPromocion: body.valorPromocion })
-      const productos = await Producto.find()
-      res.status(201).json({ message: successMessage, promotions: productos })
-    } catch (error) {
-      res.status(400).json({ error })
-    }
-  },
-  async getIndicators (req, res) {
-    try {
-      const cantidad = await Producto.count()
-      const promotions = await Producto.find({ promocion: true })
-      const inactivos = await Producto.find({ disponible: false })
-      const usuario = await User.count()
-      res.status(200).json({ cantidad: cantidad, promociones: promotions.length, inactivos: inactivos.length, usuarios: usuario })
-    } catch (error) {
-      res.status(400).json({ error })
-    }
+    res.status(200).json(result)
+  } catch (error) {
+    next(error)
   }
 }
+
+export async function getProducts (req, res, next) {
+  try {
+    const { category, subcategory } = req.params
+    const page = Math.max(parseInt(req.query.page, 10) || 1, 1)
+    const limit = Math.min(parseInt(req.query.limit, 10) || 10, 50)
+
+    const query = {
+      category,
+      $or: [
+        { subcategory },
+        { secondarySubcategory: subcategory }
+      ]
+    }
+
+    if (!req.user || req.user.role !== 'admin')
+      query.available = true
+
+    const options = {
+      page,
+      limit,
+      customLabels: {
+        totalDocs: 'totalProducts',
+        docs: 'products'
+      },
+      sort: { createdAt: -1 }
+    }
+
+    const result = await Product.paginate(query, options)
+    res.status(200).json(result)
+  } catch (error) {
+    next(error)
+  }
+}
+
+export async function getCategoryProducts (req, res, next) {
+  try {
+    const { category } = req.params
+
+    const page = Math.max(parseInt(req.query.page, 10) || 1, 1)
+    const limit = Math.min(parseInt(req.query.limit, 10) || 10, 50)
+
+    const query = { category }
+
+    if (!req.user || req.user.role !== 'admin') query.available = true
+
+    const options = {
+      page,
+      limit,
+      customLabels: {
+        totalDocs: 'totalProducts',
+        docs: 'products'
+      },
+      sort: { createdAt: -1 }
+    }
+
+    const result = await Product.paginate(query, options)
+    res.status(200).json(result)
+  } catch (error) {
+    next(error)
+  }
+}
+
+export async function getSearch (req, res, next) {
+  try {
+    const { search, type } = req.body
+
+    if (typeof search !== 'string' || typeof type !== 'string') {
+      return res.status(400).json({
+        message: 'Search and type must be strings'
+      })
+    }
+
+    const trimmedSearch = search.trim()
+
+    if (!trimmedSearch)
+      return res.status(400).json({
+        message: 'search cannot be empty'
+      })
+
+    if (!['code', 'name'].includes(type))
+      return res.status(400).json({
+        message: 'type must be either "code" or "name"'
+      })
+
+    const query = {}
+
+    if (!req.user || req.user.role !== 'admin')
+      query.available = true
+
+    const regex = new RegExp(trimmedSearch, 'i')
+
+    if (type === 'code')
+     query.code = regex
+    else
+      query.name = regex
+
+    const products = await Product.find(query).lean()
+    res.status(200).json(products)
+  } catch (error) {
+    next(error)
+  }
+}
+
+export async function getAdvancedSearch (req, res, next) {
+  try {
+    const { search, min, max } = req.body
+    const query = {}
+
+    if (!req.user || req.user.role !== 'admin')
+      query.available = true
+
+    if (search && search.trim())
+      query.name = new RegExp(search.trim(), 'i')
+
+    const minNum = Number(min)
+    const maxNum = Number(max)
+
+    if (!isNaN(minNum) || !isNaN(maxNum)) {
+      query.price = {}
+      if (minNum > 0) query.price.$gte = minNum
+      if (maxNum > 0) query.price.$lte = maxNum
+
+      if (Object.keys(query.price).length === 0) delete query.price
+    }
+
+    const products = await Product.find(query).lean()
+
+    res.status(200).json(products)
+  } catch (error) {
+    next(error)
+  }
+}
+
+export async function getPromotions (req, res, next) {
+  try {
+    const promotions = await Product.find({ promotion: true }).lean()
+
+    res.status(200).json(promotions)
+  } catch (error) {
+    next(error)
+  }
+}
+
+export async function deletePromotions (req, res, next) {
+  try {
+    const result = await Product.updateMany(
+      { promotion: true },
+      {
+        promotion: false,
+        promotionValue: 0
+      }
+    )
+
+    res.status(200).json({
+      message: 'All active promotions have been cleared successfully',
+      modifiedCount: result.modifiedCount
+    })
+  } catch (error) {
+    next(error)
+  }
+}
+
+export async function deletePromotion (req, res, next) {
+  try {
+    const { id } = req.body
+
+    if (!id) {
+      return res.status(400).json({
+        message: 'Product ID is required'
+      })
+    }
+
+    const updatedProduct = await Product.findByIdAndUpdate(
+      id,
+      {
+        $set: {
+          promotion: false,
+          promotionValue: 0
+        }
+      },
+      { new: true }
+    ).lean()
+
+    if (!updatedProduct) {
+      return res.status(404).json({ message: 'Product not found' })
+    }
+
+    res.status(200).json({
+      message: 'Promotion removed successfully',
+      product: updatedProduct
+    })
+  } catch (error) {
+    next(error)
+  }
+}
+
+export async function changePromotionPrice (req, res, next) {
+  try {
+    const { id, newPromotionPrice } = req.body
+    const price = Number(newPromotionPrice)
+
+    if (!id || isNaN(price))
+      return res.status(400).json({
+        message: 'Product ID and new promotion price are required'
+      })
+
+    const updatedProduct = await Product.findByIdAndUpdate(
+      id,
+      {
+        $set: {
+          promotion: true,
+          promotionValue: price
+        }
+      },
+      { new: true }
+    ).lean()
+
+    if (!updatedProduct) {
+      return res.status(404).json({ message: 'Product not found' })
+    }
+
+    res.status(200).json({
+      message: 'Promotion price updated successfully',
+      product: updatedProduct
+    })
+  } catch (error) {
+    next(error)
+  }
+}
+
+export async function updateProduct (req, res, next) {
+  try {
+    const { id } = req.params
+    const { body, files } = req
+
+    const product = await Product.findById(id)
+
+    if (!product)
+      return res.status(404).json({ message: 'Product not found' })
+
+    const updateData = { ...body }
+    const uploadTasks = [];
+
+    if (files?.image) {
+      if (product.pictureId) deleteFromCloudinary(product.pictureId)
+
+      uploadTasks.push(
+        uploadToCloudinary(files.image[0].buffer).then(result => {
+          updateData.image = result.secure_url
+          updateData.pictureId = result.public_id
+        })
+      )
+    }
+
+    if (files && files?.image2) {
+      if (product.pictureId2) deleteFromCloudinary(product.pictureId2)
+
+      uploadTasks.push(
+        uploadToCloudinary(files.image2[0].buffer).then(result => {
+          updateData.image2 = result.secure_url
+          updateData.pictureId2 = result.public_id
+        })
+      )
+    }
+
+    await Promise.all(uploadTasks)
+
+    const updatedProduct = await Product.findByIdAndUpdate(
+      id,
+      updateData,
+      { new: true, runValidators: true }
+    )
+
+    res.status(200).json({
+      success: true,
+      message: 'Product updated successfully',
+      product: updatedProduct
+    })
+  } catch (error) {
+    next(error)
+  }
+}
+
+export async function deleteProduct (req, res, next) {
+  try {
+    const { id } = req.params
+
+    const product = await Product.findById(id)
+
+    if (!product)
+      return res.status(404).json({ message: 'Product not found' })
+
+    const deletionTasks = []
+    if (product.pictureId) deletionTasks.push(deleteFromCloudinary(product.pictureId))
+    if (product.pictureId2) deletionTasks.push(deleteFromCloudinary(product.pictureId2))
+
+    await Promise.all(deletionTasks)
+
+    await Product.findByIdAndDelete(id)
+
+    res.status(200).json({
+      success: true,
+      message: 'Product and associated images deleted successfully'
+    })
+  } catch (error) {
+    next(error)
+  }
+}
+
+export async function createGeneralPromotion (req, res, next) {
+  try {
+    const { promotionValue } = req.body
+
+    if (promotionValue === undefined || promotionValue < 0) {
+      return res.status(400).json({
+        message: 'A valid promotion value is required'
+      })
+    }
+
+    const result = await Product.updateMany(
+      {},
+      {
+        $set: {
+          promotion: true,
+          promotionValue: Number(promotionValue)
+        }
+      }
+    )
+
+    res.status(200).json({
+      message: 'General promotion applied successfully',
+      modifiedCount: result.modifiedCount
+    });
+  } catch (error) {
+    next(error)
+  }
+}
+
+export async function getIndicators (req, res, next) {
+  try {
+    const [totalProducts, activePromotions, inactiveProducts, totalUsers] = await Promise.all([
+      Product.countDocuments(),
+      Product.countDocuments({ promotion: true }),
+      Product.countDocuments({ available: false }),
+      User.countDocuments()
+    ])
+
+    res.status(200).json({
+      totalProducts,
+      activePromotions,
+      inactiveProducts,
+      totalUsers
+    })
+  } catch (error) {
+    next(error)
+  }
+}
+

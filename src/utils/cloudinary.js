@@ -1,5 +1,4 @@
-const Busboy = require('busboy')
-const cloudinary = require('cloudinary').v2
+import { v2 as cloudinary } from 'cloudinary'
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -7,54 +6,27 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET
 })
 
-exports.cloudinaryService = (req, res, next) => {
-  const busboy = new Busboy({ headers: req.headers })
-  req.body = {}
+export const uploadToCloudinary = (buffer) => {
+  const folderName = process.env.CLOUDINARY_FOLDER || 'dev_products'
 
-  let uploadingFile = false
-  let uploadingCount = 0
-
-  function done () {
-    if (uploadingFile) return
-    if (uploadingCount > 0) return
-    next()
-  }
-
-  busboy.on('field', (key, value) => {
-    req.body[key] = value
+  return new Promise((resolve, reject) => {
+    cloudinary.uploader.upload_stream(
+      { upload_preset: 'photos-products', folder: folderName },
+      (error, result) => {
+        if (error) return reject(error)
+        resolve(result)
+      }
+    ).end(buffer)
   })
-
-  busboy.on('file', (key, file) => {
-    uploadingFile = true
-    uploadingCount++
-
-    const stream = cloudinary.uploader.upload_stream({
-      upload_preset: 'photos-products'
-    },
-    (err, res) => {
-      if (err) throw new Error('Algo salió mal')
-
-      const pictureId = 'pictureId'
-      const pictureId2 = 'pictureId2'
-      req.body[key] = res.secure_url
-      if (key === 'image') { req.body[pictureId] = res.public_id } else if (key === 'image2') req.body[pictureId2] = res.public_id
-      uploadingFile = false
-      uploadingCount--
-      done()
-    })
-
-    file.on('data', buffer => {
-      stream.write(buffer)
-    })
-
-    file.on('end', () => {
-      stream.end()
-    })
-  })
-
-  busboy.on('finish', () => {
-    done()
-  })
-
-  req.pipe(busboy)
 }
+
+export const deleteFromCloudinary = async (publicId) => {
+  try {
+    if (publicId)
+      await cloudinary.uploader.destroy(publicId)
+  } catch (error) {
+    console.error('Error deleting from cloudinary: ', error)
+  }
+}
+
+export default cloudinary

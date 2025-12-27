@@ -1,31 +1,20 @@
-require('dotenv').config()
-const cors = require('cors')
-const morgan = require('morgan')
-const { connect } = require('./db')
-const express = require('express')
-const bodyParser = require('body-parser')
-const usuarioRouter = require('./routes/usuario')
-const productoRouter = require('./routes/producto')
+import 'dotenv/config'
+import { createApp } from './app.js'
 
-const port = process.env.PORT || 8000
-const app = express()
-connect()
+const PORT = process.env.PORT || 8000
 
-app.use(bodyParser.json({ limit: '10mb' }))
-app.use(express.json())
-app.use(cors({
-  origin: [process.env.FRONTEND, process.env.ADMON, process.env.DEV, 'http://localhost:3000'],
-  methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
-  credentials: true,
-  optionsSuccessStatus: 204
-}))
+const startServer = async () => {
+  const app = await createApp()
 
-app.options('*', cors())
-app.use(morgan('dev'))
+  app.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`)
+  })
+}
 
-app.use('/productos', productoRouter)
-app.use('/usuarios', usuarioRouter)
-
-app.listen(port, () => {
-  console.log(`App running at http://localhost:${port}`)
+process.on('unhandledRejection', (err) => {
+  console.error('Unhandled Rejection! Shutting down...');
+  console.error(err.name, err.message);
+  process.exit(1);
 })
+
+startServer()
