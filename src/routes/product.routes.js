@@ -41,39 +41,26 @@ const updateProductMiddlewares = [
   validateResource(updateProductSchema),
 ]
 
-// --- PUBLIC ROUTES ---
-// Searches
+// --- ROUTES ---
+router.post('/', createProductMiddlewares, createProduct)
+
 router.get('/search', optionalAuth, getSearch)
 router.post('/search/advanced', optionalAuth, getAdvancedSearch)
-
-// Specific listeds
 router.get('/promotions', getPromotions)
+router.get('/all', optionalAuth, getAllProducts)
+router.get('/indicators', [auth, isAdmin], getIndicators) // --- PROTECTED ROUTE --- (AUTH REQUIRED)
 
-// Filtered by hierarchy (Navigation)
 router.get('/category/:category', optionalAuth,getCategoryProducts)
 router.get('/category/:category/:subcategory', optionalAuth, getProducts)
 
-// Product Detail
-router.get('/:id', getProduct)
-
-
-// --- PROTECTED ROUTES --- (AUTH REQUIRED)
-router.get('/all', optionalAuth, getAllProducts)
-router.get('/indicators', [auth, isAdmin], getIndicators)
-
-// Create and update resources
-router.post('/', createProductMiddlewares, createProduct)
-router.patch('/:id', updateProductMiddlewares, updateProduct)
-
-// Delete product
-router.delete('/:id', [auth, isAdmin], deleteProduct)
-
 // Promotions management
-router.post('/promotions/general', [auth, isAdmin], createGeneralPromotion)
-router.patch('/:id/promotion-price', [auth, isAdmin], changePromotionPrice)
-router.delete('/promotions', [auth, isAdmin], deletePromotions)
-router.delete('/:id/promotion', [auth, isAdmin], deletePromotion)
+router.delete('/promotions', [auth, isAdmin], deletePromotions) // --- PROTECTED ROUTE --- (AUTH REQUIRED)
+router.post('/promotions/general', [auth, isAdmin], createGeneralPromotion) // --- PROTECTED ROUTE --- (AUTH REQUIRED)
+router.patch('/:id/promotion-price', [auth, isAdmin], changePromotionPrice) // --- PROTECTED ROUTE --- (AUTH REQUIRED)
+router.delete('/:id/promotion', [auth, isAdmin], deletePromotion) // --- PROTECTED ROUTE --- (AUTH REQUIRED)
 
-
+router.get('/:id', getProduct)
+router.patch('/:id', updateProductMiddlewares, updateProduct)
+router.delete('/:id', [auth, isAdmin], deleteProduct) // --- PROTECTED ROUTE --- (AUTH REQUIRED)
 
 export default router
