@@ -47,7 +47,7 @@ router.post('/', createProductMiddlewares, createProduct)
 router.get('/search', optionalAuth, getSearch)
 router.post('/search/advanced', optionalAuth, getAdvancedSearch)
 router.get('/promotions', getPromotions)
-router.get('/all', optionalAuth, getAllProducts)
+router.get('/filter', optionalAuth, getAllProducts)
 router.get('/indicators', [auth, isAdmin], getIndicators) // --- PROTECTED ROUTE --- (AUTH REQUIRED)
 
 router.get('/category/:category', optionalAuth,getCategoryProducts)

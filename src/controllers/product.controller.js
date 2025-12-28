@@ -78,27 +78,38 @@ export async function getProduct (req, res, next) {
 
 export async function getAllProducts (req, res, next) {
   try {
-    const page = Math.max(parseInt(req.query.page, 10) || 1, 1)
-    const limit = Math.min(parseInt(req.query.limit, 10) || 10, 50)
+    const { page = 1, limit = 12, search, min, max, category, subcategory } = req.query;
 
     const query = {}
 
     if (!req.user || req.user.role !== 'admin')
       query.available = true
 
+    if (search)
+      query.$or = [
+        { name: new RegExp(search.trim(), 'i') },
+        { code: new RegExp(search.trim(), 'i') }
+      ];
 
-    const options = {
-      page,
-      limit,
-      customLabels: {
-        totalDocs: 'totalProducts',
-        docs: 'products'
-      },
-      sort: { createdAt: -1 }
+    if (category) query.category = category;
+
+    if (subcategory)
+      query.$or = [{ subcategory }, { secondarySubcategory: subcategory }];
+
+    if (min || max) {
+      query.price = {};
+      if (min) query.price.$gte = Number(min);
+      if (max) query.price.$lte = Number(max);
     }
 
-    const result = await Product.paginate(query, options)
+    const options = {
+      page: parseInt(page),
+      limit: parseInt(limit),
+      customLabels: { totalDocs: 'totalProducts', docs: 'products' },
+      sort: { createdAt: -1 }
+    };
 
+    const result = await Product.paginate(query, options)
     res.status(200).json(result)
   } catch (error) {
     next(error)
