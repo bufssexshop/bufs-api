@@ -78,33 +78,46 @@ export async function getProduct (req, res, next) {
 
 export async function getAllProducts (req, res, next) {
   try {
-    const { page = 1, limit = 12, search, min, max, category, subcategory } = req.query;
+    const page = Math.max(parseInt(req.query.page, 10) || 1, 1)
+    const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 12, 1), 50)
 
+    const { search, min, max, category, subcategory } = req.query
     const query = {}
 
     if (!req.user || req.user.role !== 'admin')
       query.available = true
 
-    if (search)
+    if (search && search.trim()) {
+      const searchRegex = new RegExp(search.trim(), 'i')
       query.$or = [
-        { name: new RegExp(search.trim(), 'i') },
-        { code: new RegExp(search.trim(), 'i') }
-      ];
+        { name: searchRegex },
+        { code: searchRegex }
+      ]
+    }
 
-    if (category) query.category = category;
+    if (category) query.category = category
 
-    if (subcategory)
-      query.$or = [{ subcategory }, { secondarySubcategory: subcategory }];
+    if (subcategory) {
+      query.$and = query.$and || [];
+      query.$and.push({
+        $or: [{ subcategory }, { secondarySubcategory: subcategory }]
+      });
+    }
 
-    if (min || max) {
+    const minNum = parseFloat(min);
+    const maxNum = parseFloat(max);
+
+    if (!isNaN(minNum) || !isNaN(maxNum)) {
       query.price = {};
-      if (min) query.price.$gte = Number(min);
-      if (max) query.price.$lte = Number(max);
+      if (!isNaN(minNum) && minNum >= 0) query.price.$gte = minNum;
+      if (!isNaN(maxNum) && maxNum >= 0) query.price.$lte = maxNum;
+
+      if (Object.keys(query.price).length === 0) delete query.price;
     }
 
     const options = {
-      page: parseInt(page),
-      limit: parseInt(limit),
+      page,
+      limit,
       customLabels: { totalDocs: 'totalProducts', docs: 'products' },
       sort: { createdAt: -1 }
     };
@@ -357,7 +370,7 @@ export async function updateProduct (req, res, next) {
       return res.status(404).json({ message: 'Product not found' })
 
     const updateData = { ...body }
-    const uploadTasks = [];
+    const uploadTasks = []
 
     if (files?.image) {
       if (product.pictureId) deleteFromCloudinary(product.pictureId)
@@ -448,7 +461,7 @@ export async function createGeneralPromotion (req, res, next) {
     res.status(200).json({
       message: 'General promotion applied successfully',
       modifiedCount: result.modifiedCount
-    });
+    })
   } catch (error) {
     next(error)
   }
