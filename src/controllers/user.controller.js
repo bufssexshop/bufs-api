@@ -144,3 +144,27 @@ export async function updateUserDetails(req, res, next) {
   }
 }
 
+export async function acceptTerms(req, res, next) {
+  try {
+    const { id } = req.user;
+
+    const updatedUser = await User.findByIdAndUpdate(
+      id,
+      { termsAndConditions: true },
+      { new: true, runValidators: true }
+    ).select('-password');
+
+    if (!updatedUser) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: 'Terms accepted successfully',
+      user: updatedUser
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
