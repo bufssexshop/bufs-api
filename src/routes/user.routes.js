@@ -9,6 +9,7 @@ import {
   signup,
   getUser,
   getUsers,
+  acceptTerms,
   authValidation,
   toggleUserStatus,
   updateUserDetails
