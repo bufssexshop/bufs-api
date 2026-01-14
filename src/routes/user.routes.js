@@ -12,7 +12,8 @@ import {
   acceptTerms,
   authValidation,
   toggleUserStatus,
-  updateUserDetails
+  updateOwnProfile,
+  updateUserDetails,
 } from '../controllers/user.controller.js'
 
 const router = express.Router()
@@ -24,6 +25,7 @@ router.post('/signin', validateResource(signInSchema), signin)
 router.post('/signup', [auth, isAdmin, validateResource(signUpSchema)], signup)
 router.get('/me', auth, getUser)
 router.patch('/accept-terms', auth, acceptTerms);
+router.patch('/profile', auth, updateOwnProfile);
 router.get('/validate', auth, authValidation)
 router.get('/all', [auth, isAdmin], getUsers)
 router.patch('/toggle-status/:id', [auth, isAdmin], toggleUserStatus);

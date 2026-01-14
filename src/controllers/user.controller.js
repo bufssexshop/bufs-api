@@ -168,3 +168,32 @@ export async function acceptTerms(req, res, next) {
   }
 }
 
+export async function updateOwnProfile(req, res, next) {
+  try {
+    const { id } = req.user;
+    const updateData = { ...req.body };
+
+    delete updateData.role;
+    delete updateData.active;
+    delete updateData.termsAndConditions;
+
+    const updatedUser = await User.findByIdAndUpdate(
+      id,
+      updateData,
+      { new: true, runValidators: true }
+    ).select('-password');
+
+    if (!updatedUser) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: 'Profile updated successfully',
+      user: updatedUser
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
