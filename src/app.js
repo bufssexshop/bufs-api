@@ -5,6 +5,7 @@ import { connectDB } from './config/db.js'
 import { errorHandler } from './shared/errors/errorHandler.js'
 import userRouter from './routes/user.routes.js'
 import productRouter from './routes/product.routes.js'
+import orderRouter from './routes/order.routes.js'
 
 export async function createApp () {
   await connectDB()
@@ -13,16 +14,9 @@ export async function createApp () {
   app.use(express.json({ limit: '10mb' }))
   app.use(morgan('dev'))
 
-  // LOGS PARA DEBUGGING
-  console.log('🔧 CORS Configuration:')
-  console.log('  FRONTEND:', process.env.FRONTEND)
-  console.log('  ADMON:', process.env.ADMON)
-  console.log('  DEV:', process.env.DEV)
-
   app.use(
     cors({
       origin: (origin, callback) => {
-        // Lista de orígenes permitidos desde variables de entorno
         const allowedOrigins = [
           process.env.FRONTEND,
           process.env.ADMON,
@@ -30,29 +24,22 @@ export async function createApp () {
           'http://localhost:3000'
         ].filter(Boolean)
 
-        console.log('📥 Incoming request from origin:', origin)
-        console.log('✅ Allowed origins:', allowedOrigins)
-
-        // Permitir requests sin origin (Postman, curl, mobile apps, etc.)
+        // Permitir requests sin origin (Postman, curl, etc.)
         if (!origin) {
-          console.log('✅ No origin header - allowing request')
           return callback(null, true)
         }
 
-        // Verificar si el origin está en la lista exacta
+        // Verificar si el origin está en la lista
         if (allowedOrigins.includes(origin)) {
-          console.log('✅ Origin match found - allowing request')
           return callback(null, true)
         }
 
-        // Permitir todos los preview deployments de Vercel
+        // Permitir preview deployments de Vercel
         if (origin.endsWith('.vercel.app')) {
-          console.log('✅ Vercel deployment detected - allowing request')
           return callback(null, true)
         }
 
         // Rechazar otros orígenes
-        console.log('❌ CORS BLOCKED - Origin not in allowed list')
         callback(new Error('Not allowed by CORS'))
       },
       credentials: true,
@@ -61,8 +48,12 @@ export async function createApp () {
     })
   )
 
+  // Routes
   app.use('/products', productRouter)
   app.use('/users', userRouter)
+  app.use('/orders', orderRouter)
+
+  // Error handler (siempre al final)
   app.use(errorHandler)
 
   return app
