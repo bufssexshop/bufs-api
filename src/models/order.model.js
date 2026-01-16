@@ -35,15 +35,6 @@ const orderSchema = new Schema({
   updatedAt: { type: Date, default: Date.now }
 });
 
-// Generar número de orden automáticamente
-orderSchema.pre('save', async function(next) {
-  if (!this.orderNumber) {
-    const count = await model('Order').countDocuments();
-    this.orderNumber = `ORD-${String(count + 1).padStart(5, '0')}`;
-  }
-  next();
-});
-
 const Order = models.Order || model('Order', orderSchema);
 
 export default Order;

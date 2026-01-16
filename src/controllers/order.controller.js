@@ -14,16 +14,21 @@ export async function createOrder(req, res, next) {
     }
 
     // Obtener datos del usuario
-    const user = await User.findById(userId);
+    const user = await User.findOne({ _id: userId });
     if (!user) {
       return res.status(404).json({ message: 'Usuario no encontrado' });
     }
 
+    // Generar número de orden
+    const count = await Order.countDocuments();
+    const orderNumber = `ORD-${String(count + 1).padStart(5, '0')}`;
+
     // Calcular totales
     const subtotal = items.reduce((sum, item) => sum + item.subtotal, 0);
-    const total = subtotal; // Aquí puedes agregar impuestos, descuentos, etc
+    const total = subtotal;
 
     const orderData = {
+      orderNumber, // ← Agregar explícitamente
       userId,
       userName: `${user.firstName} ${user.lastName}`,
       userEmail: user.email,
